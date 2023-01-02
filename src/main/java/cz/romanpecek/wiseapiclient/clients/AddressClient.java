@@ -7,5 +7,7 @@ public interface AddressClient {
 
     Address create(NewAddress newAddress);
 
-    Address update(NewAddress updateAddress);
+    Address getById(Long addressId);
+
+
 }

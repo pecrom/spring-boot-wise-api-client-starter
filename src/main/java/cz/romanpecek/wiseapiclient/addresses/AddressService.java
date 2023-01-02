@@ -6,23 +6,18 @@ import cz.romanpecek.wiseapiclient.addresses.dto.AddressDetail;
 import cz.romanpecek.wiseapiclient.addresses.dto.NewAddress;
 import cz.romanpecek.wiseapiclient.addresses.dto.UserOccupation;
 import cz.romanpecek.wiseapiclient.addresses.enums.State;
-import cz.romanpecek.wiseapiclient.addresses.enums.USState;
 import cz.romanpecek.wiseapiclient.clients.AddressClient;
 import cz.romanpecek.wiseapiclient.config.AddressConfig;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 
 import javax.validation.ValidationException;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.Optional;
 
 @Service
-@Validated
 @RequiredArgsConstructor
 public class AddressService {
     private final AddressClient addressClient;
@@ -33,7 +28,7 @@ public class AddressService {
      * Adds address info to user profile.
      * @return {@link Address}
      */
-    public Address create(@NotNull Long profileId, @NotNull CountryCode country, @NotEmpty String firstLine, @NotEmpty String postCode, @NotEmpty String city, State state, Collection<UserOccupation> occupations) {
+    public Address create(@Nonnull Long profileId, @Nonnull CountryCode country, @Nonnull String firstLine, @Nonnull String postCode, @Nonnull String city, @Nullable State state, @Nullable Collection<UserOccupation> occupations) {
         if (isStateRequired(country) && state == null) {
             throw new ValidationException("State is required for country: " + country);
         }
@@ -50,6 +45,19 @@ public class AddressService {
                         .build();
 
         return addressClient.create(address);
+    }
+
+    /**
+     * Updates address info to user profile.
+     * @return {@link Address}
+     */
+    public Address update(@Nonnull Long profileId, @Nonnull CountryCode country, @Nonnull String firstLine, @Nonnull String postCode, @Nonnull String city, @Nullable State state, @Nullable Collection<UserOccupation> occupations) {
+        return create(profileId, country, firstLine, postCode, city, state, occupations);
+    }
+
+    public Optional<Address> getById(@Nonnull Long addressId) {
+        return Optional.empty();
+//        addressClient.getById(addressId)
     }
 
     private AddressDetail createAddressDetail(CountryCode country, State state, String city, String firstLine, String postCode, Collection<UserOccupation> occupations) {
