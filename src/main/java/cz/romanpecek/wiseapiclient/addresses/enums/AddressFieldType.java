@@ -1,6 +1,6 @@
 package cz.romanpecek.wiseapiclient.addresses.enums;
 
-public enum AddressFieldTypeEnum {
+public enum AddressFieldType {
     TEXT,
     SELECT
 }

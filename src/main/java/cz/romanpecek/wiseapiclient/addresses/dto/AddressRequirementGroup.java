@@ -1,6 +1,6 @@
 package cz.romanpecek.wiseapiclient.addresses.dto;
 
-import cz.romanpecek.wiseapiclient.addresses.enums.AddressFieldTypeEnum;
+import cz.romanpecek.wiseapiclient.addresses.enums.AddressFieldType;
 import lombok.Data;
 
 import java.util.Collection;
@@ -8,7 +8,7 @@ import java.util.Collection;
 @Data
 public class AddressRequirementGroup {
     private String key;
-    private AddressFieldTypeEnum type;
+    private AddressFieldType type;
     private Boolean refreshRequirementsOnChange;
     private Boolean required;
     private String displayFormat;
