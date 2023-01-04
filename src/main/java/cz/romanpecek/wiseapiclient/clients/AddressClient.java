@@ -10,17 +10,21 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.Collection;
 
-@FeignClient(name = "addresses", url = "${randomjokeapi.url}")
+@FeignClient(name = "addresses", url = "abc")
 public interface AddressClient {
 
-    @PostMapping()
+    @PostMapping(path = "/v1/addresses")
     Address create(NewAddress newAddress);
 
+    @PostMapping(path = "/v1/addresses")
     ResponseEntity<Address> getById(Long addressId);
 
+    @PostMapping(path = "/v1/addresses")
     ResponseEntity<Collection<Address>> getAllByProfileId(Long profileId);
 
+    @PostMapping(path = "/v1/addresses")
     Collection<AddressRequirement> getAddressRequirements();
 
+    @PostMapping(path = "/v1/addresses")
     Collection<AddressRequirement> getAddressRequirements(AddressRequirementDetails addressRequirementDetails);
 }

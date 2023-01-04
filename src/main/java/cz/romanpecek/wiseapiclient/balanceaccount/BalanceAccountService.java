@@ -1,7 +1,6 @@
 package cz.romanpecek.wiseapiclient.balanceaccount;
 
 import com.neovisionaries.i18n.CurrencyCode;
-import cz.romanpecek.wiseapiclient.addresses.dto.Address;
 import cz.romanpecek.wiseapiclient.balanceaccount.dto.BalanceAccount;
 import cz.romanpecek.wiseapiclient.balanceaccount.dto.DeletedBalanceAccount;
 import cz.romanpecek.wiseapiclient.balanceaccount.dto.NewBalanceAccount;
