@@ -45,12 +45,7 @@ public class AddressService {
 
         AddressDetail detail = createAddressDetail(country, state, city, firstLine, postCode, occupations);
 
-        NewAddress address = NewAddress.builder()
-                        .profile(profileId)
-                        .detail(detail)
-                        .build();
-
-        return addressClient.create(address);
+        return addressClient.create(new NewAddress(profileId, detail));
     }
 
     /**

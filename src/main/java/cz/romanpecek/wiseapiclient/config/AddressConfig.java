@@ -15,6 +15,7 @@ import java.util.Set;
 @Configuration
 @ConfigurationProperties("test")
 public class AddressConfig {
+    private String token;
 
     private Set<CountryCode> requiresStateForCountry = Collections.emptySet();
     private Set<CountryCode> requiresOccupationForCountry = Collections.emptySet();

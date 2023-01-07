@@ -1,0 +1,3 @@
+wise:
+  sandboxUrl: https://api.sandbox.transferwise.tech
+  prodUrl: https://api.transferwise.com

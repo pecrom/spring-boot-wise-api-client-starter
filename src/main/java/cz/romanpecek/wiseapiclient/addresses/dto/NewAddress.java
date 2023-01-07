@@ -1,14 +1,17 @@
 package cz.romanpecek.wiseapiclient.addresses.dto;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.Accessors;
 
-@Builder
+@Data
+@RequiredArgsConstructor
 @NoArgsConstructor
-@AllArgsConstructor
+@Accessors(chain = true)
+@ToString
 public class NewAddress {
 
     /**
@@ -21,5 +24,5 @@ public class NewAddress {
      * Address details
      */
     @NonNull
-    protected AddressDetail detail;
+    protected AddressDetail details;
 }

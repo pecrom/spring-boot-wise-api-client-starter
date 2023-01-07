@@ -2,6 +2,7 @@ package cz.romanpecek.wiseapiclient.addresses.dto;
 
 import com.neovisionaries.i18n.CountryCode;
 import lombok.Data;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import java.util.Collection;

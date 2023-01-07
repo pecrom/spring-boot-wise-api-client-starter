@@ -1,0 +1,5 @@
+wise:
+  sandbox: true
+  api:
+    token: ${wiseToken}
+    defaultProfile: ${wiseProfile}
