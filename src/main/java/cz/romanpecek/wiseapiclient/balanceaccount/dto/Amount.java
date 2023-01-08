@@ -7,6 +7,6 @@ import java.math.BigDecimal;
 
 @Data
 public class Amount {
-    private BigDecimal amount;
-    private CurrencyCode currency;
+    protected BigDecimal value;
+    protected CurrencyCode currency;
 }

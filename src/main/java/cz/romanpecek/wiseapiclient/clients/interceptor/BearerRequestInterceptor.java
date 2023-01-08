@@ -8,7 +8,6 @@ import feign.jackson.JacksonDecoder;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.openfeign.support.ResponseEntityDecoder;
-import org.springframework.cloud.openfeign.support.SpringDecoder;
 import org.springframework.context.annotation.Bean;
 
 @Data
