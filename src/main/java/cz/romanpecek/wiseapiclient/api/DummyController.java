@@ -2,11 +2,12 @@ package cz.romanpecek.wiseapiclient.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.neovisionaries.i18n.CountryCode;
+import com.neovisionaries.i18n.CurrencyCode;
 import cz.romanpecek.wiseapiclient.addresses.AddressService;
-import cz.romanpecek.wiseapiclient.addresses.dto.OccupationFormatEnum;
-import cz.romanpecek.wiseapiclient.addresses.dto.UserOccupation;
-import cz.romanpecek.wiseapiclient.addresses.enums.USState;
+import cz.romanpecek.wiseapiclient.balanceaccount.BalanceAccountService;
+import cz.romanpecek.wiseapiclient.balanceaccount.enums.BalanceAccountType;
+import cz.romanpecek.wiseapiclient.balanceaccount.enums.ResponseType;
+import cz.romanpecek.wiseapiclient.balanceaccount.enums.StatementType;
 import cz.romanpecek.wiseapiclient.clients.AddressClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +16,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/dummy")
@@ -32,10 +33,12 @@ public class DummyController {
 
     private final ObjectMapper objectMapper;
 
+    private final BalanceAccountService balanceAccountService;
 
 
     @GetMapping
     public String dummyTest() throws JsonProcessingException {
-        return objectMapper.writeValueAsString(addressService.getAddressRequirements(Map.of("country", "us")));
+
+        return objectMapper.writeValueAsString(balanceAccountService.getBalanceAccountStatement(profileId,  133669L, OffsetDateTime.now().minusDays(365), OffsetDateTime.now(), StatementType.COMPACT, ResponseType.JSON));
     }
 }

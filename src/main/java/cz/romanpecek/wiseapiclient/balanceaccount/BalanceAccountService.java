@@ -1,12 +1,18 @@
 package cz.romanpecek.wiseapiclient.balanceaccount;
 
 import com.neovisionaries.i18n.CurrencyCode;
+import cz.romanpecek.wiseapiclient.balanceaccount.dto.Amount;
 import cz.romanpecek.wiseapiclient.balanceaccount.dto.BalanceAccount;
+import cz.romanpecek.wiseapiclient.balanceaccount.dto.ConversionResult;
 import cz.romanpecek.wiseapiclient.balanceaccount.dto.DeletedBalanceAccount;
+import cz.romanpecek.wiseapiclient.balanceaccount.dto.MoveBetweenBalances;
 import cz.romanpecek.wiseapiclient.balanceaccount.dto.NewBalanceAccount;
 import cz.romanpecek.wiseapiclient.balanceaccount.enums.BalanceAccountType;
+import cz.romanpecek.wiseapiclient.balanceaccount.enums.ResponseType;
+import cz.romanpecek.wiseapiclient.balanceaccount.enums.StatementType;
 import cz.romanpecek.wiseapiclient.clients.BalanceAccountClient;
 import jakarta.annotation.Nonnull;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -15,14 +21,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import javax.validation.ValidationException;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BalanceAccountService {
 
+    private static final int MAX_STATEMENT_PERIOD_DAYS = 469;
     private final BalanceAccountClient balanceAccountClient;
 
     /**
@@ -36,7 +50,7 @@ public class BalanceAccountService {
      * @param type type of the account STANDARD or SAVINGS
      * @return {@link BalanceAccount} created balance account
      */
-    public BalanceAccount create(@Nonnull Long profileId, String name, @Nonnull CurrencyCode currency, @Nonnull BalanceAccountType type) {
+    public BalanceAccount create(@Nonnull Long profileId, String name, @NonNull UUID idempotenceUUID, @Nonnull CurrencyCode currency, @Nonnull BalanceAccountType type) {
         if (BalanceAccountType.SAVINGS.equals(type) && StringUtils.isEmpty(name)) {
             throw new ValidationException("For SAVING account type, name is also required");
         }
@@ -46,7 +60,7 @@ public class BalanceAccountService {
                                                                             .type(type)
                                                                             .build();
 
-        return balanceAccountClient.create(profileId, newBalanceAccount);
+        return balanceAccountClient.create(profileId, idempotenceUUID, newBalanceAccount);
     }
 
     /**
@@ -56,7 +70,7 @@ public class BalanceAccountService {
      * @param types types of the balance accounts which should be returned
      * @return {@link Collection<BalanceAccount>} collection of Balance accounts
      */
-    public Collection<BalanceAccount> getAllByProfileIdAndTypes(@Nonnull Long profileId, @Nonnull Collection<BalanceAccountType> types) {
+    public Collection<BalanceAccount> getAllByProfileIdAndTypes(@Nonnull Long profileId, @Nonnull BalanceAccountType... types) {
         String commaTypes = commaSeparatedTypes(types);
 
         ResponseEntity<Collection<BalanceAccount>> response = balanceAccountClient.getAllByProfileIdAndTypes(profileId, commaTypes);
@@ -91,12 +105,60 @@ public class BalanceAccountService {
      * @param accountId id of the balance account which should be closed
      * @return {@link DeletedBalanceAccount} closed account info
      */
-    public DeletedBalanceAccount deleteByProfileIdAndId(@Nonnull Long profileId, @Nonnull Long accountId) {
+    public void deleteByProfileIdAndId(@Nonnull Long profileId, @Nonnull Long accountId) {
         // @TODO add check that the amount is 0
-        return balanceAccountClient.deleteByProfileIdAndId(profileId, accountId);
+        balanceAccountClient.deleteByProfileIdAndId(profileId, accountId);
     }
 
-    private String commaSeparatedTypes(Collection<BalanceAccountType> types) {
-        return types.stream().map(Enum::name).collect(Collectors.joining(","));
+    /**
+     * Generates statement for the provided balanceId, with the response in specified type. Note that the PDF type includes Wise branding.
+     *
+     * The period between intervalStart and intervalEnd cannot exceed 469 days (around 1 year 3 months).
+     * @param profileId for which profile the statement should be generated
+     * @param accountId id of the balance account for which the statement should be generated
+     * @param intervalStart start date for statement generation
+     * @param intervalEnd end date for statement generation
+     * @param statementType COMPACT or FLAT
+     * @param responseType specifies whether CSV, JSON or PDF should be returned
+     * @return {@link byte[]} Response in byte array
+     */
+    public byte[] getBalanceAccountStatement(@Nonnull Long profileId, @Nonnull Long accountId, @Nonnull OffsetDateTime intervalStart, @Nonnull OffsetDateTime intervalEnd, @Nonnull StatementType statementType, @Nonnull ResponseType responseType)  {
+        if (Period.between(intervalStart.toLocalDate(), intervalEnd.toLocalDate()).getDays() > MAX_STATEMENT_PERIOD_DAYS) {
+            throw new ValidationException("Difference between start and end date is more than " + MAX_STATEMENT_PERIOD_DAYS);
+        }
+
+        ResponseEntity<byte[]> bb = balanceAccountClient.getStatementByProfileIdAndIdAndType(profileId, accountId, responseType.getResponse(), intervalStart, intervalEnd, statementType);
+        return new byte[5];
+    }
+
+    /**
+     * Allows the conversion of funds between two STANDARD balance accounts in different currencies. You first must generate a quote with "payOut": "BALANCE".
+     *
+     * @param profileId used for conversion
+     * @param idempotenceUUID used for any subsequent retry call in the case that the initial call fails
+     * @param quoteId id of quote for which the conversion should apply
+     * @return {@link ConversionResult} result of conversion
+     */
+    public ConversionResult convertBetweenBalances(@Nonnull Long profileId, @Nonnull UUID idempotenceUUID, @Nonnull Long quoteId)  {
+        return balanceAccountClient.convertBetweenBalances(profileId, idempotenceUUID, quoteId);
+    }
+
+    /**
+     * Allows the conversion of funds between two STANDARD balance accounts in different currencies. You first must generate a quote with "payOut": "BALANCE".
+     *
+     * @param profileId used for conversion
+     * @param idempotenceUUID used for any subsequent retry call in the case that the initial call fails
+     * @param quoteId id of quote for which the conversion should apply
+     * @return {@link ConversionResult} result of conversion
+     */
+    public ConversionResult moveBetweenBalances(@Nonnull Long profileId, @Nonnull UUID idempotenceUUID, @Nonnull Long sourceBalanceId, @Nonnull Long targetBalanceId, @Nonnull Amount amount)  {
+        MoveBetweenBalances moveBetweenBalances = new MoveBetweenBalances().setSourceBalanceId(sourceBalanceId)
+                .setTargetBalanceId(targetBalanceId)
+                .setAmount(amount);
+        return balanceAccountClient.moveBetweenBalances(profileId, idempotenceUUID, moveBetweenBalances);
+    }
+
+    private String commaSeparatedTypes(BalanceAccountType... types) {
+        return Arrays.stream(types).map(Enum::name).collect(Collectors.joining(","));
     }
 }
